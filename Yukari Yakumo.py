@@ -16,7 +16,7 @@ def create(bd='./Ran_Yakumo.db'):
     conn.commit()
     cursor.close(), conn.close()
 
-def insert(inp:str, cursor): #Fiz uma modificação ainda não testada no commutatio. Se não funcionar já sabe o porquê
+def insert(inp:str, cursor):
     if inp.startswith('add site'):
         cursor.execute(f"""INSERT INTO Websites (sites,url,private) values(?,?,?)""",
                        (inp[9:], input('url?:'), input('private?(0||1): ')))
@@ -27,11 +27,13 @@ def insert(inp:str, cursor): #Fiz uma modificação ainda não testada no commut
         cursor.execute(fr"""INSERT INTO Livros (livros,dir,page) values(?,?,?)""",
                        (inp[9:], commutatio(input('dir?: ')), input('page?: ')))
     else: return inp
+
 #Um tanto confuso. Melhorar o código
 def Index(ager: tuple, tabella: str, locus: str):
     with sqlite3.connect(locus) as connect:
         cursor = connect.cursor()
         itens = cursor.execute(f"SELECT {', '.join(ager)} FROM {tabella}").fetchall()
+        itens = sorted(set(itens))
     num_cols = len(ager)
     if num_cols == 1:
         print(f"{ager[0]}:"), print(', '.join(str(row[0]) for row in itens))
@@ -89,17 +91,21 @@ while (inp:= input().lower()) != '':
 
 # Output
 for out in output:
-    if out in sites:
-        try:Ostium(*cursor.execute(f'SELECT url, private FROM Websites WHERE sites LIKE ?', [out]).fetchone())
-        except: print('Erro de site')
-    elif out in apps:
-        try: Ostium(*cursor.execute(f'SELECT dir FROM Apps WHERE apps LIKE ?', [out]).fetchone())
-        except: print('Erro de Game')
-    elif out in books:
-        try:Ostium(*cursor.execute(f'SELECT dir FROM Livros WHERE livros LIKE ?', [out]).fetchone())
-        except: print('Erro de Livro')
+    try:
+        if out in sites:
+                for outS in cursor.execute(f'SELECT url, private FROM Websites WHERE sites LIKE ?', [out]).fetchall():
+                    Ostium(*outS)
+        elif out in apps:
+            for outA in cursor.execute(f'SELECT dir FROM Apps WHERE apps LIKE ?', [out]).fetchall():
+                Ostium(*outA)
+        elif out in books:
+            for outB in cursor.execute(f'SELECT dir FROM Livros WHERE livros LIKE ?', [out]).fetchall():
+                Ostium(*outB)
+    except Exception as e:
+        print(f'Erro de output! - {e}')
+        continue
 # Search system (working)
-    elif out.startswith('search '): Ostium('https://google.com/' + out[7:], 1)
+    #elif out.startswith('search '): Ostium('https://google.com/' + out[7:], 1)
 
 #Ending
 connector.commit()
