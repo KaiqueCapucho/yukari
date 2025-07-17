@@ -101,11 +101,11 @@ for out in output:
         elif out in books:
             for outB in cursor.execute(f'SELECT dir FROM Livros WHERE livros LIKE ?', [out]).fetchall():
                 Ostium(*outB)
+        elif out.startswith('search '): Ostium('https://google.com/' + out[7:], 1) # Search system
     except Exception as e:
         print(f'Erro de output! - {e}')
         continue
-# Search system (working)
-    #elif out.startswith('search '): Ostium('https://google.com/' + out[7:], 1)
+
 
 #Ending
 connector.commit()
