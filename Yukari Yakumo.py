@@ -1,6 +1,4 @@
-import subprocess
-import sys, sqlite3
-import webbrowser
+import subprocess, sys, sqlite3, webbrowser
 
 #Improvements: print opcional p/outros livros, mecanismo p/alterar página salva, delete, melhorar código/lógica
 
@@ -58,18 +56,23 @@ def Index(ager: tuple, tabella: str, locus: str):
     return [linha[0].lower() for linha in itens]
 
 def Ostium(opus, arg=0):
-    if opus.endswith('.docx'): subprocess.Popen(['C:\\Program Files (x86)\\Microsoft Office\\Office14\\WINWORD.exe', opus])
-    elif opus.endswith('.xlsx'): subprocess.Popen(['C:\\Program Files (x86)\\Microsoft Office\\Office14\\EXCEL.EXE', opus])
-    elif opus.endswith('.txt'): subprocess.Popen(['C:\\Windows\\System32\\notepad.exe', opus])
-    elif opus.endswith('.pdf'): webbrowser.open(opus)
-    elif opus.endswith('.exe'): subprocess.Popen(opus)
-    elif opus.endswith('.db'): subprocess.Popen(["C:/Program Files/SQLiteStudio/SQLiteStudio.exe", opus])
-    elif opus.startswith('http'):
-        if arg: subprocess.Popen(["C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe", "--incognito", opus])
-        else: subprocess.Popen(["C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",opus])
-    else: print('Erro! Extensão de arquivo inválida')
+    match opus.split('.')[1]:
+        case 'docx': subprocess.Popen(['C:\\Program Files (x86)\\Microsoft Office\\Office14\\WINWORD.exe', opus])
+        case 'xlsx': subprocess.Popen(['C:\\Program Files (x86)\\Microsoft Office\\Office14\\EXCEL.EXE', opus])
+        case 'txt':  subprocess.Popen(['C:\\Windows\\System32\\notepad.exe', opus])
+        case 'pdf':  webbrowser.open(opus)
+        case 'exe':  subprocess.Popen(opus)
+        case 'db':   subprocess.Popen(["C:/Program Files/SQLiteStudio/SQLiteStudio.exe", opus])
+        case _:
+            if opus.startswith('http') and arg:
+                subprocess.Popen(["C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe", "--incognito", opus])
+            elif opus.startswith('http'):
+                subprocess.Popen(["C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",opus])
+            else: print('Erro! Extensão de arquivo inválida')
 
 create()
+
+#Remove aspas de uma string e troca '\' por '/' (usado para salvar diretórios no bd
 commutatio = lambda x: (x[1:-1] if x.strip().startswith('"') and x.strip().endswith('"') else x).replace('\\', '/')
 
 #Essa parte dos livros ainda está meio ruim
@@ -89,7 +92,7 @@ while (inp:= input().lower()) != '':
         continue
     else: connector.commit()
 
-# Output
+# Output (o uso do for é para que uma chave possa abrir vários diretórios ou urls)
 for out in output:
     try:
         if out in sites:
