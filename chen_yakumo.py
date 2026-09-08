@@ -1,68 +1,53 @@
-import tkinter as tk
 import ran_yakumo as ran
+from pathlib import Path
+from PyQt6 import uic
+from PyQt6.QtWidgets import QWidget, QLineEdit, QComboBox, QFormLayout, QGroupBox, QMessageBox
 
-def openTelaAdd(self, titulo):
-    newWindow = tk.Toplevel(self.master)
-    newWindow.title("Tela de Adição")
-    newWindow.geometry("300x350")
-    TelaAdd(newWindow, titulo)
+class TelaAddEdit(QWidget):
+    def __init__(self, parent=None, key=None):
+        super().__init__(parent)
+        uic.loadUi(Path(__file__).parent/"telas/chen.ui", self)
+        self.key, self.entries = key, []
+        self.ids = ran.getIDs(key)
+        if key:
+            self.titulo.setText("Editar/Remover Dados")
+            self.edtChave.setText(key)
+            for value, param, type_ in ran.getValue(key): self.createEntries(value, param, type_)
+        else: self.createEntries()
 
-def openTelaEdit(self, titulo):
-    newWindow = tk.Toplevel(self.master)
-    newWindow.title("Tela de Edição/Remoção")
-    newWindow.geometry("300x350")
-    TelaEdit(newWindow, titulo)
-class TelaAdd(tk.Frame):
-    def __init__(self, master, titulo):
-        super().__init__(master)
-        self.pack(padx=20, pady=20)
+        self.btnCancela.clicked.connect(self.close)
+        self.btnConfirma.clicked.connect(self.btnConfirmar)
 
-        # Título opcional
-        self.title = tk.Label(self, text="Adicionar Dados", font=("Arial", 14))
-        self.title.pack(pady=10)
-        self.titulo = titulo
-        key,value,note = ran.getColumns(titulo)
+    def createEntries(self, value="", param=None, type_=None):
+        grupo = QGroupBox()
+        layout = QFormLayout(grupo)
 
-        # Chave
-        tk.Label(self, text=key).pack(anchor="w")
-        self.chave = tk.Entry(self, width=30)
-        self.chave.pack(pady=5)
+        valor = QLineEdit(value)
+        valor.setPlaceholderText("Value")
 
-        # Value
-        tk.Label(self, text=value).pack(anchor="w")
-        self.valor = tk.Entry(self, width=30)
-        self.valor.pack(pady=5)
+        nota = QLineEdit(str(param or ""))
+        nota.setPlaceholderText("Parameter")
 
-        # Nota
-        tk.Label(self, text=note).pack(anchor="w")
-        self.nota = tk.Entry(self, width=30)
-        self.nota.pack(pady=5)
+        tipo = QComboBox()
+        tipo.addItems(["site",  "archive","app"])
+        tipo.setCurrentText(type_)
 
-        # Frame para os botões
-        self.frame_botoes = tk.Frame(self)
-        self.frame_botoes.pack(pady=15)
+        for campo in (valor, nota, tipo): layout.addRow(campo)
 
-        # Botão Confirmar (sem comando/back-end)
-        self.btnCancela = tk.Button(self.frame_botoes, text="Cancelar",
-                                    command= lambda: master.destroy())
-        self.btnCancela.pack(side="left", padx=5)
+        self.layoutCampos.addWidget(grupo)
+        self.entries.append((valor, nota, tipo))
 
-        # Botão Cancelar (sem comando/back-end)
-        self.btnConfirma = tk.Button(self.frame_botoes, text="Confirmar",
-                             command= lambda: self.btnConfirmar(master))
-        self.btnConfirma.pack(side="left", padx=5)
-
-    def btnConfirmar(self, master):
-        ran.insertValue(self.titulo, self.chave.get(), self.valor.get(), int(self.nota.get()) )
-        master.destroy()
-
-class TelaEdit(tk.Frame):
-    def __init__(self, master, titulo):
-        super().__init__(master)
-        self.pack(padx=20, pady=20)
-
-        # Título opcional
-        self.title = tk.Label(self, text="Adicionar Dados", font=("Arial", 14))
-        self.title.pack(pady=10)
-        self.titulo = titulo
-        key, value, note = ran.getColumns(titulo)
+    def btnConfirmar(self):
+        if not (key:= self.edtChave.text().strip()):
+            QMessageBox.warning(self, "Aviso", "A Key não pode estar vazia.")
+            return
+        print('ok')
+        for i, (valor, nota, tipo) in enumerate(self.entries):
+            print('ok 2')
+            try: param = int(nota.text())
+            except ValueError:
+                QMessageBox.warning(self, "Aviso", "Parameter deve ser um número.")
+                return
+            if self.key is None: ran.insertValue(key, valor.text(), tipo.currentText(), param)
+            else: ran.updateValue(self.ids[i], key, valor.text(),tipo.currentText(),param)
+        self.close()

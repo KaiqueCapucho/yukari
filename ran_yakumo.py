@@ -1,79 +1,72 @@
-import os, sqlite3, subprocess, webbrowser, winreg
-from typing import Any
+import os, sqlite3, subprocess, platform, shutil
+import webbrowser
+from pathlib import Path
 
+def getRootDir()->str:
+    return str(Path(__file__).resolve().parent)
 
-def createBD(bd='./bd.db'):
+bd_dir = getRootDir() + '/bd.db'
+
+def createBD(bd=bd_dir):
     with sqlite3.connect(bd) as conn:
-        conn.execute("""CREATE TABLE IF NOT EXISTS Sites(_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key STRING NOT NULL, url STRING NOT NULL UNIQUE, private BOOLEAN NOT NULL)""")
-        conn.execute("""CREATE TABLE IF NOT EXISTS Apps(_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key STRING NOT NULL, dir STRING NOT NULL UNIQUE, adm BOOLEAN NOT NULL)""")
-        conn.execute("""CREATE TABLE IF NOT EXISTS Archives(_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key STRING NOT NULL, dir STRING NOT NULL UNIQUE, notes String)""")
+        conn.execute("""CREATE TABLE IF NOT EXISTS Shortcuts(_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key STRING NOT NULL, value STRING NOT NULL UNIQUE, type STRING NOT NULL, param BOOLEAN NOT NULL DEFAULT 0, CHECK (type IN ('app', 'archive', 'site')))""")
 
-def dropBD(bd='./bd.db'):
+
+def dropBD(bd=bd_dir):
     if os.path.exists(bd):os.remove(bd)
     else: print(f"O arquivo {bd} não foi encontrado.")
 
-#Problema de SQL Injection no {table}
-def insertValue(table:str, key:str, value:str, data:int, bd:str='./bd.db' ):
+def insertValue(key:str, value:str,  type:str, param:int=0, bd:str=bd_dir ):
     with sqlite3.connect(bd) as conn:
-        conn.execute(f"""INSERT INTO {table} VALUES (?, ?,?,?)""", (None, key, value, data))
+        conn.execute(f"""INSERT INTO Shortcuts (key, value, type, param) VALUES (?,?,?,?)""", (key, value, type, param))
 
-#Idem ao InsertValue
-def getKeys(table:str, bd:str='./bd.db')-> list[str]:
+def getKeys(type:str, bd:str=bd_dir) -> list[str]:
     with sqlite3.connect(bd) as conn:
-        return [k for (k,) in conn.execute(f"SELECT DISTINCT key FROM {table} ORDER BY key").fetchall()]
+        return [k for (k,) in conn.execute(f"SELECT DISTINCT key FROM Shortcuts WHERE type LIKE ? ORDER BY key", (type,)).fetchall()]
 
-#Idem ao getKeys
-def getValue(table:str, key:str, bd:str='./bd.db')-> list[tuple[str, int]]:
+#Gera o parâmetro da função openDir (v. abaixo)
+def getValue(key:str, bd:str=bd_dir)-> list[tuple[str, int,str]]:
     with sqlite3.connect(bd) as conn:
-        return [row[2:] for row in conn.execute(f"SELECT * FROM {table} WHERE key LIKE ?", (key,))]
-
-def getColumns(table:str, bd:str='./bd.db'):
+        return conn.execute(f"SELECT value, param, type FROM Shortcuts WHERE key LIKE ?", (key,)).fetchall()
+def getIDs(key:str,bd:str=bd_dir):
     with sqlite3.connect(bd) as conn:
-        return [c[1] for c in conn.execute(f'PRAGMA table_info({table});').fetchall()][1:]
+        rows = conn.execute("SELECT _id FROM Shortcuts WHERE key = ?",(key,)).fetchall()
+    return [row[0] for row in rows]
+
+def getColumns(bd:str=bd_dir)->tuple[int,str,str,str,int]:
+    with sqlite3.connect(bd) as conn:
+        return tuple(c[1] for c in conn.execute(f'PRAGMA table_info(Shortcuts);').fetchall())
+
+def updateValue(id_:int, key:str, value:str, type_:str, param:int, bd:str=bd_dir):
+    with sqlite3.connect(bd) as conn:
+        conn.execute("UPDATE Shortcuts SET key = ?, value = ?, type = ?, param = ?WHERE _id = ?",
+                     (key, value, type_, param, id_))
+def deleteKey(key:str, bd:str=bd_dir):
+    with sqlite3.connect(bd) as conn:
+        conn.execute("DELETE FROM Shortcuts WHERE key = ?",(key,))
 
 
+#Ver se Funciona
 def obterNavegador():
-    try:
-        # Pega o ProgId do navegador padrão
-        browserChoicePath = r"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice"
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, browserChoicePath) as bcp:
-            #A função QueryValueEx retorna um valor (no caso o ProgID) e seu tipo (int, str, etc)
-            progID, _ = winreg.QueryValueEx(bcp, "ProgId")
+    if shutil.which("xdg-settings"):
+        try:
+            result = subprocess.check_output(["xdg-settings", "get", "default-web-browser"], text=True).strip()
+            if result: return result
+        except subprocess.CalledProcessError: pass
 
-        # Usa o ProgId para pegar o comando real
-        command_path = fr"{progID}\shell\open\command"
-        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, command_path) as bcp:
-            command, _ = winreg.QueryValueEx(bcp, "")
-
-        #retorna o caminho do exe
-        return command.split('"')[1] if command.startswith('"') else command.split(' ')[0]
-
-    except Exception as e:
-        raise FileNotFoundError("Não foi possível encontrar o navegador padrão.") from e
-
-def openDir(values:list[tuple[str,int]]):
+#Generalizar o openDir
+def openDir(values:list[tuple[str,int, str]]):
+    sys = platform.system()
     for value in values:
-        v, arg = value
-        match v.split('.')[1]:
-            case 'docx': subprocess.Popen(['C:\\Program Files (x86)\\Microsoft Office\\Office14\\WINWORD.exe', v])
-            case 'xlsx': subprocess.Popen(['C:\\Program Files (x86)\\Microsoft Office\\Office14\\EXCEL.EXE', v])
-            case 'txt':  subprocess.Popen(['C:\\Windows\\System32\\notepad.exe', v])
-            case 'pdf':  webbrowser.open(v)
-            case 'exe':  subprocess.Popen(v)
-            case 'db':   subprocess.Popen(["C:/Program Files/SQLiteStudio/SQLiteStudio.exe", v])
-            case _:
-                if v.startswith('http') and arg:subprocess.Popen([obterNavegador(), "--incognito", v])
-                elif v.startswith('http'): subprocess.Popen([obterNavegador(), v])
-                else: print('Erro! Extensão de arquivo inválida')
-
-
-
-#insertValue('Sites', 'chatgpt', 'https://chatgpt.com/', True)
-#insertValue('Sites', 'spotify', 'https://open.spotify.com/', False)
-#insertValue('Archives', 'latin', 'C:/Pendragon/Obenkyou/Idiomas/Latim/Dicionários/Dicionário do Latim Essencial.pdf', 0)
-#insertValue('Archives', 'latin', 'C:/Pendragon/Obenkyou/Idiomas/Latim/Gramatica Latina curso unico completo.pdf', 0)
-
+        v, arg, _ = value
+        if v.startswith('http') and arg:subprocess.Popen(['/usr/bin/brave', "--incognito", v])
+        elif v.startswith('http'): subprocess.Popen(['/usr/bin/brave', v])
+        elif v.startswith('search '): subprocess.Popen(["/usr/bin/brave","--incognito", f'https://duckduckgo.com/?q={v[7:]}'])
+        else:
+            if sys == 'Windows' : os.startfile(v)                                     #Não sei se funciona
+            elif sys == 'Darwin': subprocess.Popen(["open", v])       #Idem
+            elif sys == 'Linux' : subprocess.Popen(["xdg-open", v])
+   #Ok
+            else: print('Erro!')
 

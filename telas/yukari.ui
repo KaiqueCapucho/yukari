@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GapYouki</class>
+ <widget class="QMainWindow" name="GapYouki">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1212</width>
+    <height>884</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#main{
+	background-color: #4e2174;
+}
+#edtFilter{
+	background-color: #ff494d;
+	height: 30px;
+	font-size: 20px;
+
+}
+QPushButton{
+	background-color: #fed16c;
+	height: 30px;
+	font-size: 20px;
+}
+QListWidget::item{
+    min-height: 22px;
+    margin: 5px;
+}
+#txtSearch{
+	font-size:20px;
+}
+
+#btnSearch{
+	background-color: #ff494d;
+	border: none;
+}
+#btnSearch::hover{
+	background-color:#d20c30;
+}
+#btnSearch::pressed{
+	background-color:#bd1338;
+}</string>
+  </property>
+  <widget class="QWidget" name="main">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="leftMargin">
+     <number>19</number>
+    </property>
+    <property name="topMargin">
+     <number>20</number>
+    </property>
+    <property name="rightMargin">
+     <number>20</number>
+    </property>
+    <property name="bottomMargin">
+     <number>20</number>
+    </property>
+    <item row="0" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLineEdit" name="edtFilter">
+            <property name="placeholderText">
+             <string>Filter lists...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="MyListWidget" name="listSites">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>300</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="MyListWidget" name="listApps">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>300</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="MyListWidget" name="listArchs">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>300</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lblYukari">
+            <property name="maximumSize">
+             <size>
+              <width>250</width>
+              <height>600</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap>../img/yukarin.jpg</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <property name="sizeConstraint">
+           <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+          </property>
+          <item>
+           <widget class="QTextEdit" name="txtSearch">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>150</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="tabChangesFocus">
+             <bool>true</bool>
+            </property>
+            <property name="placeholderText">
+             <string>Multiple Lines Input...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnSearch">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Open multiple lines input</string>
+          </property>
+          <property name="default">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyListWidget</class>
+   <extends>QListWidget</extends>
+   <header>yukari_yakumo</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>edtFilter</tabstop>
+  <tabstop>listSites</tabstop>
+  <tabstop>listApps</tabstop>
+  <tabstop>listArchs</tabstop>
+  <tabstop>txtSearch</tabstop>
+  <tabstop>btnSearch</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

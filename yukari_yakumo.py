@@ -1,92 +1,95 @@
-import tkinter as tk
-import ran_yakumo as ran
-from chen_yakumo import openTelaAdd
-from chen_yakumo import openTelaEdit
-from PIL import Image, ImageTk
+import sys
+from pathlib import Path
+from PyQt6 import uic
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QListWidgetItem, QListWidget, QMenu
+import ran_yakumo as ran, chen_yakumo as chen
 
-
-def createList(parent, titulo:str, keys:list[str]):
-    frame = tk.LabelFrame(parent, text=titulo)
-    container = tk.Frame(frame)
-    container.pack(fill="both", expand=True)
-    icone = ImageTk.PhotoImage(Image.open('./img/edit_icon.png').resize((20,20)))
-    frame.icone = icone
-    for key in keys:
-        linha = tk.Frame(container)
-        linha.pack(fill="x", pady=2)
-    ##Botão principal
-        tk.Button(linha,text=key,command=lambda t=titulo, k=key: btnListOnClick(parent, t, k)
-        ).pack(side="left", fill="x", expand=True)
-    ##Botão de edit
-        tk.Button(linha, image=icone, command=lambda t=titulo, k=key: openTelaEdit(parent, f'Edit {titulo}')
-        ).pack(side="right", padx=5)
-    ##Botão de adição
-    tk.Button(container, text="+ Add", command=lambda: openTelaAdd(parent, titulo)).pack(fill="x", pady=5)
-    return  frame
-
-def btnListOnClick(parent:tk, table:str, key:str):
-    ran.openDir(ran.getValue(table, key))
-    parent.winfo_toplevel().destroy()
-
-def btnTxtOnClick(master, txt):
-    for t in txt.strip().splitlines():
-        if t in ran.getKeys('Sites'):    ran.openDir(ran.getValue('Sites', t))
-        if t in ran.getKeys('Apps'):     ran.openDir(ran.getValue('Apss', t))
-        if t in ran.getKeys('Archives'): ran.openDir(ran.getValue('Archives', t))
-    master.destroy()
-
-class App(tk.Tk):
-    def __init__(self, a, b):
+class App(QMainWindow):
+    def __init__(self, width:int=1100, height:int=750):
         super().__init__()
-        self.title('gap youki')
-        self.update_idletasks()
-        x = (self.winfo_screenwidth() // 2) - (a // 2)
-        y = (self.winfo_screenheight() // 2) - (b // 2)
-        self.geometry(f"{a}x{b}+{x}+{y}")
-        self.telaP = TelaPrincipal(self)
-        self.telaP.pack(fill='both', expand=True)
+        uic.loadUi(Path(__file__).parent/"telas/yukari.ui", self)
+
+        self.setWindowTitle("Gap Youki")
+        self.resize(width, height)
+
+        self.createList(self.listSites,"site",ran.getKeys("site"))
+        self.createList(self.listApps,"app",ran.getKeys("app"))
+        self.createList(self.listArchs,"archive",ran.getKeys("archive"))
+
+        self.btnSearch.clicked.connect(lambda:self.btnOnClick(self.txtSearch.toPlainText()))  # Botão procurar
+        self.edtFilter.textChanged.connect(self.filter)
+
+    def createList(self, listWidget, tipo, keys):
+        addButton = QPushButton("+ Add")
+        addButton.clicked.connect(lambda: self.openTelaAddEdit())
+        addButton.setDefault(True)
+
+        item = QListWidgetItem()
+        listWidget.addItem(item)
+        listWidget.setItemWidget(item,  addButton)
+
+        for key in keys:
+            btn = QPushButton(key)
+            btn.setFocusPolicy(Qt.FocusPolicy.NoFocus) #Impossibilita que o botão seja focado
+            btn.setDefault(True)
+            btn.clicked.connect(lambda checked=False, k=key: self.btnOnClick(k))
+
+            item = QListWidgetItem()
+            listWidget.addItem(item)
+            listWidget.setItemWidget(item, btn)
+            #Configura um click c/botão direito do mouse p/abrir um menu de edição/remoção do PushButton
+            btn.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            btn.customContextMenuRequested.connect(lambda pos, b=btn, i=item: self.showMenu(b, pos, i)) #pos dá a posição onde o menu é aberto
 
 
-#TelaPrincipal extends tk.Frame
-class TelaPrincipal(tk.Frame):
-    def __init__(self, master):
-        super().__init__(master) #super() chama um obj anônimo da classe tk.Frame
-        self.config(padx=10, pady=10) #??
+    def openTelaAddEdit(self, key=None):
+        self.newWindow = chen.TelaAddEdit(key=key)
+        self.newWindow.show()
 
-        self.frameList = tk.Frame(self)
-        self.frameList.pack(fill="both", expand=True)
+    def btnOnClick(self, keys):
+        for key in keys.strip().splitlines():
+            if key.startswith('search'): ran.openDir([(key, 1, '')]) #formata o search p/padrão da função openDir
+            else: ran.openDir(ran.getValue(key))
+        self.close()
 
-        self.sites = createList(self.frameList, "Sites",    ran.getKeys('Sites'))
-        self.sites.pack(side="left", fill="both", expand=True, padx=5)
+    def filter(self, txt:str):
+        def filterList(list:QListWidget):
+            for i in range(list.count()):
+                item = list.item(i)
+                button = list.itemWidget(item)
+                if button: item.setHidden(txt.lower() not in button.text().lower())
+        filterList(self.listSites)
+        filterList(self.listApps)
+        filterList(self.listArchs)
 
-        self.apps = createList(self.frameList, "Apps",     ran.getKeys('Apps'))
-        self.apps.pack(side="left", fill="both", expand=True, padx=5)
+    def showMenu(self, botao, pos, item):
+        menu = QMenu(self)
+        editar = menu.addAction("Editar")
+        remover = menu.addAction("Remover")
+        acao = menu.exec(botao.mapToGlobal(pos))
+        if acao == editar: self.openTelaAddEdit(botao.text())
+        elif acao == remover:
+            ran.deleteKey(botao.text())
+            item.listWidget().takeItem(item.listWidget().row(item))
 
-        self.archs = createList(self.frameList, "Archives", ran.getKeys('Archives'))
-        self.archs.pack(side="left", fill="both", expand=True, padx=5)
+class MyListWidget(QListWidget):
+    #Permite que o botão dentro da lista seja ativado c/Enter
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            item = self.currentItem()
+            if item is not None:
+                btn = self.itemWidget(item)
+                if btn is not None: btn.click()
+            return
+        super().keyPressEvent(event)
 
+    #Remove a seleção do botão quando muda-se o foco (não está funcionando como deveria)
+    def focusOutEvent(self, event):
+        self.clearSelection()
+        super().focusOutEvent(event)
 
-        self.frameTxt = tk.Frame(self)
-        self.frameTxt.pack(fill="x", pady=10)
-
-        self.entrada = tk.Text(self.frameTxt)
-        self.entrada.pack(side="left", padx=5)
-        self.entrada.focus_set()
-        self.entrada.bind("<Tab>", lambda e: self.botaoTxt.focus_set() or "break")
-
-        self.botaoTxt = tk.Button(self.frameTxt, text="Procurar", command=lambda: btnTxtOnClick(master, self.entrada.get("1.0",tk.END)))
-        self.botaoTxt.pack(padx=5)
-        self.botaoTxt.bind("<Return>", lambda event: self.botaoTxt.invoke())
-
-        # Carrega imagem
-        #self.img = ImageTk.PhotoImage(Image.open("img/yukarin.jpg").resize((600, 400)))
-
-        # Canvas
-        #self.canvas = tk.Canvas(self.frameTxt)
-        #self.canvas.pack(side="right",fill="both", expand=True)
-
-        # Coloca imagem
-        #self.canvas.create_image(0, 0, image=self.img)
-
-
-App(900, 500).mainloop()
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    App().show()
+    sys.exit(app.exec())

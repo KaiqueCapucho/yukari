@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TelaAddEdit</class>
+ <widget class="QWidget" name="TelaAddEdit">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>792</width>
+    <height>504</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Adicionar Dados</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#TelaAddEdit{
+	background-color:#f2622e;
+}
+
+#edtChave {
+    background-color: #71ae2d;
+    height: 30px;
+    font-weight: bold;
+    border-radius: 10px;
+	color: #000;
+	font-size:22px;
+}
+
+QPushButton{
+	background-color:#ffcb44;
+	border-radius: 10px;
+	height: 33px;
+	width: 160px;
+	margin: 0 50px;
+	font-size:22px;
+
+}
+
+QLineEdit{
+	background-color: #986053;
+    height: 40px;
+    font-weight: bold;
+    border-radius: 10px;
+	padding:0 10px;
+	font-size:22px;
+}
+
+QComboBox {
+    background-color: #986053;
+    height: 40px;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 0 10px;
+    font-size: 22px;
+}
+#btnCancela::hover{
+	background-color:#ec9c2b;
+}
+#btnConfirma::hover{
+	background-color:#ec9c2b;
+}
+
+#btnCancela::pressed{
+	background-color:#ffd878;
+}
+#btnConfirma::pressed{
+	background-color:#ffd878;
+}</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titulo">
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Adicionar Dados</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollContent">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>772</width>
+        <height>329</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="layoutCampos">
+       <item>
+        <widget class="QLineEdit" name="edtChave">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>1000</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+         <property name="placeholderText">
+          <string>Digite a chave...</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="layoutBotoes">
+     <item>
+      <widget class="QPushButton" name="btnCancela">
+       <property name="text">
+        <string>Cancelar</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>120</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap>../img/chen_yakumo.jpg</pixmap>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnConfirma">
+       <property name="text">
+        <string>Confirmar</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
