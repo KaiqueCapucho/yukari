@@ -1,29 +1,25 @@
-import sys
+import sys, ran_yakumo as ran, chen_yakumo as chen
 from pathlib import Path
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QListWidgetItem, QListWidget, QMenu
-import ran_yakumo as ran, chen_yakumo as chen
 
 class App(QMainWindow):
-    def __init__(self, width:int=1100, height:int=750):
+    def __init__(self):
         super().__init__()
         uic.loadUi(Path(__file__).parent/"telas/yukari.ui", self)
-
-        self.setWindowTitle("Gap Youki")
-        self.resize(width, height)
-
+        # Configuração das listas
         self.createList(self.listSites,"site",ran.getKeys("site"))
         self.createList(self.listApps,"app",ran.getKeys("app"))
         self.createList(self.listArchs,"archive",ran.getKeys("archive"))
-
+        # Configuração dos ícones em vermelho (edtFilter, btnSearch)
         self.btnSearch.clicked.connect(lambda:self.btnOnClick(self.txtSearch.toPlainText()))  # Botão procurar
-        self.edtFilter.textChanged.connect(self.filter)
+        self.edtFilter.textChanged.connect(self.filter) #
 
     def createList(self, listWidget, tipo, keys):
         addButton = QPushButton("+ Add")
         addButton.clicked.connect(lambda: self.openTelaAddEdit())
-        addButton.setDefault(True)
+        addButton.setDefault(True) #Enter pressiona o botão
 
         item = QListWidgetItem()
         listWidget.addItem(item)
@@ -32,16 +28,15 @@ class App(QMainWindow):
         for key in keys:
             btn = QPushButton(key)
             btn.setFocusPolicy(Qt.FocusPolicy.NoFocus) #Impossibilita que o botão seja focado
-            btn.setDefault(True)
+            btn.setDefault(True) #Enter pressiona o botão
             btn.clicked.connect(lambda checked=False, k=key: self.btnOnClick(k))
-
+            # Adiciona os botões nas listas
             item = QListWidgetItem()
             listWidget.addItem(item)
             listWidget.setItemWidget(item, btn)
-            #Configura um click c/botão direito do mouse p/abrir um menu de edição/remoção do PushButton
+            # Configura um click c/botão direito do mouse p/abrir um menu de edição/remoção do PushButton
             btn.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
             btn.customContextMenuRequested.connect(lambda pos, b=btn, i=item: self.showMenu(b, pos, i)) #pos dá a posição onde o menu é aberto
-
 
     def openTelaAddEdit(self, key=None):
         self.newWindow = chen.TelaAddEdit(key=key)
@@ -59,9 +54,7 @@ class App(QMainWindow):
                 item = list.item(i)
                 button = list.itemWidget(item)
                 if button: item.setHidden(txt.lower() not in button.text().lower())
-        filterList(self.listSites)
-        filterList(self.listApps)
-        filterList(self.listArchs)
+        filterList(self.listSites), filterList(self.listApps), filterList(self.listArchs)
 
     def showMenu(self, botao, pos, item):
         menu = QMenu(self)
@@ -74,18 +67,15 @@ class App(QMainWindow):
             item.listWidget().takeItem(item.listWidget().row(item))
 
 class MyListWidget(QListWidget):
-    #Permite que o botão dentro da lista seja ativado c/Enter
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event):     # Permite que o botão dentro da lista seja ativado c/Enter
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             item = self.currentItem()
             if item is not None:
-                btn = self.itemWidget(item)
-                if btn is not None: btn.click()
+                if (btn:=self.itemWidget(item)) is not None: btn.click()
             return
         super().keyPressEvent(event)
+    def focusOutEvent(self, event):     #Remove a seleção do botão quando muda-se o foco (não está funcionando como deveria)
 
-    #Remove a seleção do botão quando muda-se o foco (não está funcionando como deveria)
-    def focusOutEvent(self, event):
         self.clearSelection()
         super().focusOutEvent(event)
 

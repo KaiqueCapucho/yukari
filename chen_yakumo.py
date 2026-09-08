@@ -7,8 +7,7 @@ class TelaAddEdit(QWidget):
     def __init__(self, parent=None, key=None):
         super().__init__(parent)
         uic.loadUi(Path(__file__).parent/"telas/chen.ui", self)
-        self.key, self.entries = key, []
-        self.ids = ran.getIDs(key)
+        self.key, self.entries, self.ids = key, [], ran.getIDs(key)
         if key:
             self.titulo.setText("Editar/Remover Dados")
             self.edtChave.setText(key)
@@ -41,9 +40,7 @@ class TelaAddEdit(QWidget):
         if not (key:= self.edtChave.text().strip()):
             QMessageBox.warning(self, "Aviso", "A Key não pode estar vazia.")
             return
-        print('ok')
         for i, (valor, nota, tipo) in enumerate(self.entries):
-            print('ok 2')
             try: param = int(nota.text())
             except ValueError:
                 QMessageBox.warning(self, "Aviso", "Parameter deve ser um número.")
